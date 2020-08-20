@@ -6,7 +6,6 @@ import fnmatch
 import sys
 import time
 from datetime import datetime
-
 import os
 import re
 from flask import flash
@@ -28,22 +27,11 @@ def datetime_str_to_obj(ymd_his):
     return datetime.strptime(ymd_his, "%Y-%m-%d %H:%i:%s")
 
 
-PY2 = int(sys.version[0]) == 2
-
-if PY2:
-    text_type = unicode  # noqa
-    binary_type = str
-    string_types = (str, unicode)  # noqa
-    unicode = unicode  # noqa
-    basestring = basestring  # noqa
-    reload(sys)  # noqa
-    sys.setdefaultencoding('utf8')
-else:
-    text_type = str
-    binary_type = bytes
-    string_types = (str,)
-    unicode = str
-    basestring = (str, bytes)
+text_type = str
+binary_type = bytes
+string_types = (str,)
+unicode = str
+basestring = (str, bytes)
 
 
 def detailtrace():
@@ -53,7 +41,7 @@ def detailtrace():
     f = f.f_back
     while hasattr(f, "f_code"):
         co = f.f_code
-        retStr = "->%s(%s:%s)\n" % (os.path.basename(co.co_filename),
+        retStr = "->{}({}:{})\n".format(os.path.basename(co.co_filename),
                                     co.co_name,
                                     f.f_lineno) + retStr
         f = f.f_back

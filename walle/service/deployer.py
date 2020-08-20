@@ -180,8 +180,9 @@ class Deployer:
 #            self.project_name, self.task_id, time.strftime('%Y%m%d_%H%M%S', time.localtime(time.time())))
 
         with self.localhost.cd(self.local_codebase):
-            command = 'cp -rf %s %s' % (self.dir_codebase_project, self.release_version)
-            current_app.logger.info('cd %s  command: %s  ', self.dir_codebase_project, command)
+            command = 'cp -rf {dir_codebase_project} {release_version}'.format(
+                dir_codebase_project=self.dir_codebase_project, release_version=self.release_version)
+            current_app.logger.info('cd {}  command: {}  '.format(self.dir_codebase_project, command))
 
             result = self.localhost.local(command, wenv=self.config())
 
@@ -218,13 +219,13 @@ class Deployer:
 
         # 压缩打包
         # 排除文件发布
-        self.release_version_tar = '%s.tgz' % (self.release_version)
+        self.release_version_tar = '{}.tgz'.format(self.release_version)
         with self.localhost.cd(self.local_codebase):
             if self.project_info['is_include']:
                 files = includes_format(self.release_version, self.project_info['excludes'])
             else:
                 files = excludes_format(self.release_version, self.project_info['excludes'])
-            command = 'tar zcf %s/%s %s' % (self.local_codebase.rstrip('/'), self.release_version_tar, files)
+            command = 'tar -zcf {}/{} {}'.format(self.local_codebase.rstrip('/'), self.release_version_tar, files)
             result = self.localhost.local(command, wenv=self.config())
 
     def prev_release(self, waller):
@@ -237,14 +238,14 @@ class Deployer:
         self.sequence = 4
 
         # 检查 target_releases 父目录是否存在
-        command = 'mkdir -p %s' % (self.project_info['target_releases'])
+        command = 'mkdir -p {}'.format(self.project_info['target_releases'])
         result = waller.run(command, wenv=self.config())
 
         # TODO md5
         # 传送到版本库 release
         result = waller.put(self.local_codebase + self.release_version_tar,
                             remote=self.project_info['target_releases'], wenv=self.config())
-        current_app.logger.info('command: %s', dir(result))
+        current_app.logger.info('command: {}'.format(dir(result)))
 
         # 解压
         self.release_untar(waller)
@@ -260,7 +261,7 @@ class Deployer:
                 if command.strip().startswith('#') or not command.strip():
                     continue
                 # TODO
-                target_release_version = "%s/%s" % (self.project_info['target_releases'], self.release_version)
+                target_release_version = "{}/{}".format(self.project_info['target_releases'], self.release_version)
                 with waller.cd(target_release_version):
                     result = waller.run(command, wenv=self.config())
 
@@ -277,12 +278,12 @@ class Deployer:
 
         with waller.cd(self.project_info['target_releases']):
             # 0. get previous link
-            command = '[ -L %s ] && readlink %s || echo ""' % (self.project_info['target_root'], self.project_info['target_root'])
+            command = '[ -L {} ] && readlink {} || echo ""'.format(self.project_info['target_root'], self.project_info['target_root'])
             result = waller.run(command, wenv=self.config(console=False))
             self.previous_release_version = os.path.basename(result.stdout).strip()
 
             # 1. create a tmp link dir
-            current_link_tmp_dir = 'current-tmp-%s' % (self.task_id)
+            current_link_tmp_dir = 'current-tmp-{}'.format(self.task_id)
             command = 'ln -sfn {library}/{version} {library}/{current_tmp}'.format(
                 library=self.project_info['target_releases'], version=self.release_version,
                 current_tmp=current_link_tmp_dir)
@@ -291,8 +292,9 @@ class Deployer:
             # 2. make a soft link from release to tmp link
 
             # 3. move tmp link to webroot
-            current_link_tmp_dir = '%s/current-tmp-%s' % (self.project_info['target_releases'], self.task_id)
-            command = 'mv -fT %s %s' % (current_link_tmp_dir, self.project_info['target_root'])
+            current_link_tmp_dir = '{}/current-tmp-{}'.format(self.project_info['target_releases'], self.task_id)
+            command = 'mv -fT {current_link_tmp_dir} {target_root}'.format(
+                current_link_tmp_dir=current_link_tmp_dir, target_root=self.project_info['target_root'])
             result = waller.run(command, wenv=self.config())
 
     def rollback(self, waller):
@@ -306,21 +308,22 @@ class Deployer:
 
         with waller.cd(self.project_info['target_releases']):
             # 0. get previous link
-            command = '[ -L %s ] && readlink %s || echo ""' % (self.project_info['target_root'], self.project_info['target_root'])
+            command = '[ -L {} ] && readlink {} || echo ""'.format(self.project_info['target_root'], self.project_info['target_root'])
             result = waller.run(command, wenv=self.config(console=False))
             self.previous_release_version = os.path.basename(result.stdout)
 
             # 1. create a tmp link dir
-            current_link_tmp_dir = '%s/current-tmp-%s' % (self.project_info['target_releases'], self.task_id)
-            command = 'ln -sfn %s/%s %s' % (
-                self.project_info['target_releases'], self.release_version, current_link_tmp_dir)
+            current_link_tmp_dir = '{}/current-tmp-{}'.format(self.project_info['target_releases'], self.task_id)
+            command = 'ln -sfn {target_releases}/{release_version} {current_link_tmp_dir}'.format(
+                target_releases=self.project_info['target_releases'], release_version=self.release_version,
+                current_link_tmp_dir=current_link_tmp_dir)
             result = waller.run(command, wenv=self.config())
 
             # 2. make a soft link from release to tmp link
 
             # 3. move tmp link to webroot
-            current_link_tmp_dir = '%s/current-tmp-%s' % (self.project_info['target_releases'], self.task_id)
-            command = 'mv -fT %s %s' % (current_link_tmp_dir, self.project_info['target_root'])
+            current_link_tmp_dir = '{}/current-tmp-{}'.format(self.project_info['target_releases'], self.task_id)
+            command = 'mv -fT {} {}'.format(current_link_tmp_dir, self.project_info['target_root'])
             result = waller.run(command, wenv=self.config())
 
     def release_untar(self, waller):
@@ -329,7 +332,7 @@ class Deployer:
         :return:
         '''
         with waller.cd(self.project_info['target_releases']):
-            command = 'tar zxf %s' % (self.release_version_tar)
+            command = 'tar zxf {}'.format(self.release_version_tar)
             result = waller.run(command, wenv=self.config())
 
     def post_release(self, waller):
@@ -367,7 +370,6 @@ class Deployer:
             command = 'sudo service nginx restart'
             result = waller.run(command, wenv=self.config())
 
-
     def project_detection(self):
         errors = []
         # LOCAL_SERVER_USER => git
@@ -379,8 +381,8 @@ class Deployer:
             if result.failed:
                 errors.append({
                     'title': '远程目标机器免密码登录失败',
-                    'why': '远程目标机器：%s 错误：%s' % (server_info['host'], result.stdout),
-                    'how': '在宿主机中配置免密码登录，把宿主机用户%s的~/.ssh/id_rsa.pub添加到远程目标机器用户%s的~/.ssh/authorized_keys。了解更多：http://walle-web.io/docs/troubleshooting.html' % (
+                    'why': '远程目标机器：{} 错误：{}'.format(server_info['host'], result.stdout),
+                    'how': '在宿主机中配置免密码登录，把宿主机用户{}的~/.ssh/id_rsa.pub添加到远程目标机器用户{}的~/.ssh/authorized_keys。了解更多：http://walle-web.io/docs/troubleshooting.html'.format(
                     pwd.getpwuid(os.getuid())[0], server_info['host']),
                 })
 
@@ -388,14 +390,14 @@ class Deployer:
             command = '[ -d {webroot} ] || mkdir -p {webroot}'.format(webroot=os.path.basename(self.project_info['target_root']))
             result = waller.run(command, exception=False, wenv=self.config(console=False))
 
-                # 检查 webroot 父目录是否存在,是否为软链
-            command = '[ -L "%s" ] && echo "true" || echo "false"' % (self.project_info['target_root'])
+            # 检查 webroot 父目录是否存在,是否为软链
+            command = '[ -L "{}" ] && echo "true" || echo "false"'.format(self.project_info['target_root'])
             result = waller.run(command, exception=False, wenv=self.config())
             if result.stdout == 'false':
                 errors.append({
                     'title': '远程目标机器webroot不能是已建好的目录',
-                    'why': '远程目标机器%s webroot不能是已存在的目录，必须为软链接，你不必新建，walle会自行创建。' % (server_info['host']),
-                    'how': '手工删除远程目标机器：%s webroot目录：%s' % (server_info['host'], self.project_info['target_root']),
+                    'why': '远程目标机器{} webroot不能是已存在的目录，必须为软链接，你不必新建，walle会自行创建。'.format(server_info['host']),
+                    'how': '手工删除远程目标机器：{} webroot目录：{}'.format(server_info['host'], self.project_info['target_root']),
                 })
 
         # remote release directory
@@ -445,7 +447,7 @@ class Deployer:
     def end(self, success=True, update_status=True):
         if update_status:
             status = TaskModel.status_success if success else TaskModel.status_fail
-            current_app.logger.info('success:%s, status:%s' % (success, status))
+            current_app.logger.info('success:{}, status:{}'.format(success, status))
             TaskModel().get_by_id(self.task_id).update({
                 'status': status,
                 'link_id': self.release_version,
@@ -456,7 +458,10 @@ class Deployer:
                 'title': '',
                 'username': current_user.username,
                 'project_name': self.project_info['name'],
-                'task_name': '%s ([%s](%s))' % (self.taskMdl.get('name'), self.task_id, Notice.task_url(project_name=self.project_info['name'], task_id=self.task_id)),
+                'task_name': '{name} ([{task_id}]({task_url}))'.format(
+                    name=self.taskMdl.get('name'),
+                    task_id=self.task_id,
+                    task_url=Notice.task_url(project_name=self.project_info['name'], task_id=self.task_id)),
                 'branch': self.taskMdl.get('branch'),
                 'commit': self.taskMdl.get('commit_id'),
                 'tag': self.taskMdl.get('tag'),

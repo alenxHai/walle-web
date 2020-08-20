@@ -80,11 +80,8 @@ class Repo:
         if osp.isdir(d):
             if osp.isdir(osp.join(d, 'objects')) and osp.isdir(osp.join(d, 'refs')):
                 headref = osp.join(d, 'HEAD')
-                return osp.isfile(headref) or \
-                       (osp.islink(headref) and
-                        os.readlink(headref).startswith('refs'))
-            elif (osp.isfile(osp.join(d, 'gitdir')) and
-                  osp.isfile(osp.join(d, 'commondir')) and
+                return osp.isfile(headref) or (osp.islink(headref) and os.readlink(headref).startswith('refs'))
+            elif (osp.isfile(osp.join(d, 'gitdir')) and osp.isfile(osp.join(d, 'commondir')) and
                   osp.isfile(osp.join(d, 'gitfile'))):
                 return False
         return False
@@ -196,10 +193,6 @@ class Repo:
             commit_dict = commit.split(' #@_@# ')
             from flask import current_app
             current_app.logger.info(commit_dict)
-            commits.append({
-                'id': commit_dict[0],
-                'name': commit_dict[1],
-                'message': commit_dict[2],
-            })
+            commits.append({'id': commit_dict[0], 'name': commit_dict[1], 'message': commit_dict[2]})
 
         return commits

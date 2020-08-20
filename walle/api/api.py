@@ -37,7 +37,7 @@ class ApiResource(Resource):
             for err_key in message:
                 current_app.logger.info(err_key)
                 current_app.logger.info('.'.join(message[err_key]))
-                msg = msg + "%s: %s。 " % (err_key, '.'.join(message[err_key]))
+                msg = msg + "{}: {}。 ".format(err_key, '.'.join(message[err_key]))
             message = msg
 
         return ApiResource.json(code=code, message=message, data=data)
@@ -46,7 +46,7 @@ class ApiResource(Resource):
     @staticmethod
     def json(code=0, message=None, data=[]):
         if code and code not in Code.code_msg:
-            current_app.logger.error('unknown code %s' % (code))
+            current_app.logger.error('unknown code {}'.format(code))
 
         if code in Code.code_msg and not message:
             message = Code.code_msg[code]
@@ -127,8 +127,8 @@ class SecurityResource(ApiResource):
         def is_enable(*args, **kwargs):
             if current_user.role_info.name != 'super':
                 return ApiResource.render_json(code=403, message='无操作权限')
-            current_app.logger.info("user is login: %s" % (current_user.is_authenticated))
-            current_app.logger.info("args: %s kwargs: %s" % (args, kwargs))
+            current_app.logger.info("user is login: {}".format(current_user.is_authenticated))
+            current_app.logger.info("args: {} kwargs: {}".format(args, kwargs))
             return func(*args, **kwargs)
 
         return is_enable
@@ -139,8 +139,8 @@ class SecurityResource(ApiResource):
         def is_enable(*args, **kwargs):
             if current_user.role_info.name not in ['super', 'master']:
                 return ApiResource.render_json(code=403, message='无操作权限')
-            current_app.logger.info("user is login: %s" % (current_user.is_authenticated))
-            current_app.logger.info("args: %s kwargs: %s" % (args, kwargs))
+            current_app.logger.info("user is login: {}".format(current_user.is_authenticated))
+            current_app.logger.info("args: {} kwargs: {}".format(args, kwargs))
             return func(*args, **kwargs)
 
         return is_enable

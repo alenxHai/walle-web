@@ -28,15 +28,21 @@ function init() {
     echo "----------------"
     SystemName
 
-    pip install virtualenv
-    if [ ! -d "venv" ]; then
-        virtualenv --no-site-packages venv # 注意:安装失败请指定python路径. mac 可能会有用anaconda的python. 请不要mac试用, 麻烦多多
+    pip install virtualenv -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+    if [[ ! -d "venv" ]]; then
+        virtualenv --python=python3.7 --no-site-package venv # 注意:安装失败请指定python路径. mac 可能会有用anaconda的python. 请不要mac试用, 麻烦多多
     fi
 
     requirement
-    echo "************************************************"
-    echo -e "\033[32m init walle success \033[0m"
-    echo -e "\033[32m welcome to walle 2.0 \033[0m"
+    if [[ $? == "0" ]]; then
+        echo "************************************************"
+        echo -e "\033[32m INIT WALLE SUCCESS \033[0m"
+        echo -e "\033[32m WELCOME to WALLE 2.0 \033[0m"
+    else
+        echo "************************************************"
+        echo -e "\033[32m INIT WALLE ERROR \033[0m"
+    fi
+
 }
 
 function requirement() {
@@ -49,7 +55,7 @@ function SystemName() {
     case $ID in
         centos|fedora|rhel)
             which pip
-            if [ $? != "0" ]; then
+            if [[ $? != "0" ]]; then
                 wget https://bootstrap.pypa.io/3.3/get-pip.py
                 python get-pip.py
             fi
@@ -140,7 +146,7 @@ function migration() {
     source ./venv/bin/activate
     export FLASK_APP=waller.py
     flask db upgrade
-    if [ $? == "0" ]; then
+    if [[ $? == "0" ]]; then
         echo -e "Migration:                 [\033[32m ok \033[0m]"
     else
         echo -e "Migration:                 [\033[31m fail \033[0m]"

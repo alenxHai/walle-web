@@ -7,7 +7,7 @@ import logging
 import sys
 import os
 import threading
-
+from importlib import reload
 from flask import Flask, render_template, current_app
 from flask_restful import Api
 from walle import commands
@@ -69,7 +69,7 @@ def create_app(config_object=ProdConfig):
 
     try:
         reload(sys)
-        sys.setdefaultencoding('utf-8')
+        # sys.setdefaultencoding('utf-8')
     except NameError:
         pass
 
@@ -191,7 +191,9 @@ def register_socketio(app):
     socketio.on_namespace(WalleSocketIO(namespace='/walle'))
     socket_args = {"debug": app.config.get('DEBUG'), "host": app.config.get('HOST'), "port": app.config.get('PORT')}
     socket_thread = threading.Thread(target=socketio.run, name="socket_thread", args=(app, ), kwargs=socket_args)
+    socket_thread.setDaemon(True)
     socket_thread.start()
+    socket_thread.join()
     return app
 
 

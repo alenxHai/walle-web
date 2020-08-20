@@ -7,7 +7,6 @@
     :license: Simplified BSD License, see LICENSE.txt for more details."""
 
 import base64
-
 from Crypto.Cipher import AES
 from itsdangerous import BadSignature, SignatureExpired, TimestampSigner
 
@@ -19,7 +18,7 @@ class TokenManager(object):
         # and ensure >=16 characters
         # secret = app.config.get('SECRET_KEY')
         secret = 'SECRET_KEY'
-        precursor = b'0123456789abcdef'
+        precursor = '0123456789abcdef'
         if isinstance(secret, bytes):
             key = secret + precursor
         else:

@@ -19,16 +19,19 @@ class Dingding(Notice):
         if notice_info['repo_mode'] == ProjectModel.repo_mode_tag:
             version = notice_info['tag']
         else:
-            version = '%s/%s' % (notice_info['branch'], notice_info['commit'])
+            version = '{branch}/{commit}'.format(branch=notice_info['branch'], commit=notice_info['commit'])
         data = {
             "msgtype": "markdown",
             "markdown": {
                 "title": "上线单通知",
-                "text": """#### ![screenshot](http://walle-web.io/dingding.jpg) %s %s  \n> **项目**：%s \n
-                > **任务**：%s \n
-                > **版本**：%s \n """ % (
-                notice_info['username'], notice_info['title'], notice_info['project_name'], notice_info['task_name'],
-                version)}
+                "text": """#### ![screenshot](http://walle-web.io/dingding.jpg) {username} {title}  \n
+                > **项目**：{project_name} \n
+                > **任务**：{task_name} \n
+                > **版本**：{version} \n """.format(
+                    username=notice_info['username'], itle=notice_info['title'],
+                    project_name=notice_info['project_name'], task_name=notice_info['task_name'], version=version
+                )
+            }
         }
         '''
         上线单新建, 上线完成, 上线失败

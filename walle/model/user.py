@@ -16,10 +16,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from flask import current_app
 from flask_login import AnonymousUserMixin
 
+
 class AnonymousUser(AnonymousUserMixin):
     @property
     def role(self):
         return None
+
 
 class UserModel(UserMixin, SurrogatePK, Model):
     # 表的名字:
@@ -138,9 +140,9 @@ class UserModel(UserMixin, SurrogatePK, Model):
 
     def get_id(self):
         try:
-            return unicode(self.id)  # python 2
+            return self.id
         except NameError:
-            return str(self.id)  # python 3
+            return str(self.id)
 
     def list(self, uids=[], page=0, size=10, space_id=None, kw=None):
         """

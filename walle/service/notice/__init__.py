@@ -10,7 +10,6 @@ from flask import current_app
 from walle.service.error import WalleError, Code
 
 
-
 class Notice():
     by_dingding = 'dingding'
 
@@ -21,9 +20,12 @@ class Notice():
 
     @classmethod
     def task_url(cls, project_name, task_id):
-        return '%s//%s/%s/task/deploy/%s' % ('https' if current_app.config.get('SSL') else 'http',
-                                             current_app.config.get('HOST'),
-                                             project_name, task_id)
+        return '{}//{}/{}/task/deploy/{}'.format(
+            'https' if current_app.config.get('SSL') else 'http',
+            current_app.config.get('HOST'),
+            project_name,
+            task_id
+        )
 
     @classmethod
     def create(cls, by):
