@@ -15,10 +15,49 @@ from walle.model.task import TaskModel
 from walle.service.extensions import permission
 from walle.service.rbac.role import *
 
+def async_api(wrapped_function):
+    @wraps(wrapped_function)
+    def new_function(*args, **kwargs):
+        def task_call(flask_app, environ):
+            # Create a request context similar to that of the original request
+            # so that the task can have access to flask.g, flask.request, etc.
+            with flask_app.request_context(environ):
+                try:
+                    tasks[task_id]['return_value'] = wrapped_function(*args, **kwargs)
+                except HTTPException as e:
+                    tasks[task_id]['return_value'] = current_app.handle_http_exception(e)
+                except Exception as e:
+                    # The function raised an exception, so we set a 500 error
+                    tasks[task_id]['return_value'] = InternalServerError()
+                    if current_app.debug:
+                        # We want to find out if something happened so reraise
+                        raise
+                finally:
+                    # We record the time of the response, to help in garbage
+                    # collecting old tasks
+                    tasks[task_id]['completion_timestamp'] = datetime.timestamp(datetime.utcnow())
+
+                    # close the database session (if any)
+
+        # Assign an id to the asynchronous task
+        task_id = None
+
+        # Record the task, and then launch it
+        tasks[task_id] = {'task_thread': threading.Thread(
+            target=task_call, args=(current_app._get_current_object(),
+                               request.environ))}
+        tasks[task_id]['task_thread'].start()
+
+        # Return a 202 response, with a link that the client can use to
+        # obtain task status
+        print(url_for('gettaskstatus', task_id=task_id))
+        return 'accepted', 202, {'Location': url_for('gettaskstatus', task_id=task_id)}
+    return new_function
 
 class TaskAPI(SecurityResource):
     actions = ['audit', 'reject', 'rollback']
 
+    
     def get(self, task_id=None):
         """
         fetch project list or one item
@@ -29,6 +68,7 @@ class TaskAPI(SecurityResource):
 
         return self.item(task_id) if task_id else self.list()
 
+    
     def list(self):
         """
         fetch project list
@@ -45,6 +85,7 @@ class TaskAPI(SecurityResource):
         task_list, count = TaskModel().list(page=page, size=size, kw=kw, space_id=self.space_id, user_id=user_id)
         return self.list_json(list=task_list, count=count, enable_create=permission.role_upper_reporter() and current_user.role != SUPER)
 
+    
     def item(self, task_id):
         """
         获取某个用户组
@@ -58,6 +99,7 @@ class TaskAPI(SecurityResource):
             return self.render_json(code=-1)
         return self.render_json(data=task_info)
 
+    
     def post(self):
         """
         create a task
@@ -78,6 +120,7 @@ class TaskAPI(SecurityResource):
         else:
             return self.render_error(code=Code.form_error, message=form.errors)
 
+    
     def put(self, task_id, action=None):
         """
         update task
@@ -95,6 +138,7 @@ class TaskAPI(SecurityResource):
         else:
             return self.update(task_id=task_id)
 
+    
     def update(self, task_id):
         form = TaskForm(request.form, csrf=False)
         form.set_id(task_id)
@@ -107,6 +151,7 @@ class TaskAPI(SecurityResource):
         else:
             return self.render_error(code=Code.form_error, message=form.errors)
 
+    
     def delete(self, task_id):
         """
         remove an task

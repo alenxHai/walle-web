@@ -8,7 +8,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 from walle.service.rbac.role import Permission
 from flask_socketio import SocketIO
-
+async_mode = 'threading'
 
 bcrypt = Bcrypt()
 csrf_protect = CSRFProtect()
@@ -19,4 +19,6 @@ login_manager = LoginManager()
 mail = Mail()
 
 permission = Permission()
-socketio = SocketIO(engineio_logger=True, logger=True, cors_allowed_origins=[])
+# socketio = SocketIO(engineio_logger=True, logger=True, cors_allowed_origins=[])
+socketio = SocketIO(message_queue='redis://192.168.10.106:6379/0', channel='walle', engineio_logger=False, logger=True, 
+                    cors_allowed_origins=[], async_mode=async_mode)

@@ -13,11 +13,11 @@ import os
 from walle.config.settings import Config
 
 SETTINGS = {
-    "MYSQL_USER": "root",
-    "MYSQL_PASSWORD": "walle",
+    "MYSQL_USER": "walle",
+    "MYSQL_PASSWORD": "Walle+2099",
     "MYSQL_DATABASE": "walle",
     "MYSQL_ROOT_PASSWORD": "walle",
-    "MYSQL_HOST": "127.0.0.1",
+    "MYSQL_HOST": "192.168.10.180",
     "MYSQL_PORT": 3306,
 }
 
@@ -38,7 +38,7 @@ class ProdConfig(Config):
 
     # 数据库设置 @TODO
     # SQLALCHEMY_DATABASE_URI = 'mysql://user:password@localhost:3306/walle?charset=utf8'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}:{}/{}?charset=utf8mb4'.format(
+    SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}:{}/{}?charset=utf8mb4'.format(
         SETTINGS["MYSQL_USER"], SETTINGS["MYSQL_PASSWORD"], SETTINGS["MYSQL_HOST"], SETTINGS["MYSQL_PORT"],
         SETTINGS["MYSQL_DATABASE"])
     # 阿里云RDS强制释放空闲连接导致经常报错 mysql server has gone way

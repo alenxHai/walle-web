@@ -7,6 +7,7 @@ import logging
 import sys
 import os
 import threading
+from threading import Lock
 from importlib import reload
 from flask import Flask, render_template, current_app
 from flask_restful import Api
@@ -33,6 +34,8 @@ from walle.service.extensions import bcrypt, csrf_protect, db, migrate
 from walle.service.extensions import login_manager, mail, permission, socketio
 from walle.service.websocket import WalleSocketIO
 
+thread = None
+thread_lock = Lock()
 
 def create_app(config_object=ProdConfig):
     """An application factory, as explained here: http://flask.pocoo.org/docs/patterns/appfactories/.
@@ -48,6 +51,17 @@ def create_app(config_object=ProdConfig):
     register_commands(app)
     register_logging(app)
 
+    # 单元测试不用开启 websocket
+    if app.config.get('ENV') != 'test':
+        global thread
+        with thread_lock:
+            if thread is None:
+                socketio.start_background_task(register_socketio(app))
+        # gevent.joinall([
+        #     gevent.spawn(register_blueprints(app)),
+        #     gevent.spawn(register_socketio(app)),
+        # ])
+
     @app.before_request
     def before_request():
         # TODO
@@ -61,11 +75,7 @@ def create_app(config_object=ProdConfig):
 
     @app.route('/api/websocket')
     def index():
-        return render_template('socketio.html')
-
-    # 单元测试不用开启 websocket
-    if app.config.get('ENV') != 'test':
-        register_socketio(app)
+        return render_template('socketio.html', async_mode=socketio.async_mode)
 
     try:
         reload(sys)
@@ -187,13 +197,14 @@ def register_logging(app):
 def register_socketio(app):
     if len(sys.argv) > 1 and sys.argv[1] == 'db':
         return app
-    socketio.init_app(app, async_mode='gevent')
+        #  async_mode='threading'
+    socketio.init_app(app, async_mode=socketio.async_mode)
     socketio.on_namespace(WalleSocketIO(namespace='/walle'))
-    socket_args = {"debug": app.config.get('DEBUG'), "host": app.config.get('HOST'), "port": app.config.get('PORT')}
-    socket_thread = threading.Thread(target=socketio.run, name="socket_thread", args=(app, ), kwargs=socket_args)
-    socket_thread.setDaemon(True)
-    socket_thread.start()
-    socket_thread.join()
+    socketio.run(app, host=app.config.get('HOST'), port=app.config.get('PORT'),  debug=True)
+    # socket_args = {"debug": app.config.get('DEBUG'), "host": app.config.get('HOST'), "port": app.config.get('PORT')}
+    # socket_thread = threading.Thread(target=register_socketio(app), name="socket_thread", args=(app, ))
+    # socket_thread.start()
+
     return app
 
 

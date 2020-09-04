@@ -7,7 +7,7 @@ from pprint import pformat
 
 from sqlalchemy import desc, or_
 from sqlalchemy.sql.sqltypes import Date, DateTime
-from werkzeug import cached_property
+from werkzeug.utils import cached_property
 from flask import current_app
 from walle.service.extensions import db
 from walle.service.utils import basestring

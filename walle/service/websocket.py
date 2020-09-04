@@ -40,11 +40,11 @@ class WalleSocketIO(Namespace):
             self.room = self.project_id
 
         if not current_user.is_authenticated:
-            emit('close', {'event': 'disconnect', 'data': {}}, room=self.room)
+            emit('close', {'event': 'disconnect', 'data': {}}, room=self.room, json=True, broadcast=True)
         join_room(room=self.room)
 
         self.task_info = TaskModel(id=self.room).item()
-        emit('construct', {'event': 'connect', 'data': self.task_info}, room=self.room)
+        emit('construct', {'event': 'connect', 'data': self.task_info}, room=self.room, json=True, broadcast=True)
 
     def on_deploy(self, message):
         if self.task_info['status'] in [TaskModel.status_pass, TaskModel.status_fail]:
@@ -54,51 +54,51 @@ class WalleSocketIO(Namespace):
             else:
                 wi.walle_deploy()
         else:
-            emit('console', {'event': 'forbidden', 'data': self.task_info}, room=self.room)
+            emit('console', {'event': 'forbidden', 'data': self.task_info}, room=self.room, json=True, broadcast=True)
 
     def on_branches(self, message=None):
         wi = Deployer(project_id=self.room)
         try:
             branches = wi.list_branch()
-            emit('branches', {'event': 'branches', 'data': branches}, room=self.room)
+            emit('branches', {'event': 'branches', 'data': branches}, room=self.room, json=True, broadcast=True)
         except Exception as e:
-            emit('branches', {'event': 'error', 'data': {'message': e.message or str(e)}}, room=self.room)
+            emit('branches', {'event': 'error', 'data': {'message': e.message or str(e)}}, room=self.room, json=True, broadcast=True)
 
     def on_tags(self, message=None):
         wi = Deployer(project_id=self.room)
         try:
             tags = wi.list_tag()
             tags.reverse()
-            emit('tags', {'event': 'tags', 'data': tags}, room=self.room)
+            emit('tags', {'event': 'tags', 'data': tags}, room=self.room, json=True, broadcast=True)
         except Exception as e:
-            emit('tags', {'event': 'error', 'data': {'message': e.message}}, room=self.room)
+            emit('tags', {'event': 'error', 'data': {'message': e.message}}, room=self.room, json=True, broadcast=True)
 
     def on_commits(self, message=None):
         wi = Deployer(project_id=self.room)
         if 'branch' not in message:
-            emit('commits', {'event': 'error', 'data': {'message': 'invalid branch'}}, room=self.room)
+            emit('commits', {'event': 'error', 'data': {'message': 'invalid branch'}}, room=self.room, json=True, broadcast=True)
         else:
             try:
                 commits = wi.list_commit(message['branch'])
-                emit('commits', {'event': 'commits', 'data': commits}, room=self.room)
+                emit('commits', {'event': 'commits', 'data': commits}, room=self.room, json=True, broadcast=True)
             except Exception as e:
-                emit('commits', {'event': 'error', 'data': {'message': e.message}}, room=self.room)
+                emit('commits', {'event': 'error', 'data': {'message': e.message}}, room=self.room, json=True, broadcast=True)
 
     def on_ping(self, message):
         current_app.logger.info(message)
         import time
         emit('pong',
              {'event': 'ping:pong', 'data': {'time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}},
-             room=self.room)
+             room=self.room, json=True, broadcast=True)
 
     def on_logs(self, message):
         current_app.logger.info(message)
-        self.logs(task=self.room)
+        self.logs(task=self.room, json=True, broadcast=True)
 
     def logs(self, task):
         task_info = TaskModel().get_by_id(self.task_id)
         if task_info.status not in [TaskModel.status_doing, TaskModel.status_success, TaskModel.status_fail]:
-            emit('console', {'event': 'console', 'data': ''}, room=self.room)
+            emit('console', {'event': 'console', 'data': ''}, room=self.room, json=True, broadcast=True)
             return True
 
         deployer = Deployer(task_id=self.room)
@@ -107,9 +107,9 @@ class WalleSocketIO(Namespace):
             if log['stage'] == RecordModel.stage_end:
                 cmd = 'success' if log['status'] == RecordModel.status_success else 'fail'
                 msg = log['host'] + ' 部署完成！' if log['status'] == RecordModel.status_success else log['host'] + Code.code_msg[Code.deploy_fail]
-                emit(cmd, {'event': 'finish', 'data': {'host': log['host'], 'message': msg}}, room=self.room)
+                emit(cmd, {'event': 'finish', 'data': {'host': log['host'], 'message': msg}}, room=self.room, json=True, broadcast=True)
             else:
-                emit('console', {'event': 'console', 'data': log}, room=self.room)
+                emit('console', {'event': 'console', 'data': log}, room=self.room, json=True, broadcast=True)
 
         deployer.end(success=task_info.status == TaskModel.status_success, update_status=False)
 
