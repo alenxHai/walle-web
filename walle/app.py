@@ -6,8 +6,11 @@ gevent.monkey.patch_all()
 import logging
 import sys
 import os
+<<<<<<< Updated upstream
 import threading
 from threading import Lock
+=======
+>>>>>>> Stashed changes
 from importlib import reload
 from flask import Flask, render_template, current_app
 from flask_restful import Api
@@ -75,7 +78,17 @@ def create_app(config_object=ProdConfig):
 
     @app.route('/api/websocket')
     def index():
+<<<<<<< Updated upstream
         return render_template('socketio.html', async_mode=socketio.async_mode)
+=======
+        return render_template('socketio.html')
+
+    # 单元测试不用开启 websocket
+    if app.config.get('ENV') != 'test':
+        gevent.joinall([
+            gevent.spawn(register_socketio(app)),
+        ])
+>>>>>>> Stashed changes
 
     try:
         reload(sys)
@@ -194,9 +207,20 @@ def register_logging(app):
     app.logger.addHandler(file_handler_error)
 
 
+# def register_socketio(app):
+#     if len(sys.argv) > 1 and sys.argv[1] == 'db':
+#         return app
+#     socketio.init_app(app, async_mode='gevent')
+#     socketio.on_namespace(WalleSocketIO(namespace='/walle'))
+#     socket_args = {"debug": app.config.get('DEBUG'), "host": app.config.get('HOST'), "port": app.config.get('PORT')}
+#     socket_thread = threading.Thread(target=socketio.run, name="socket_thread", args=(app, ), kwargs=socket_args)
+#     socket_thread.start()
+#     return app
+
 def register_socketio(app):
     if len(sys.argv) > 1 and sys.argv[1] == 'db':
         return app
+<<<<<<< Updated upstream
         #  async_mode='threading'
     socketio.init_app(app, async_mode=socketio.async_mode)
     socketio.on_namespace(WalleSocketIO(namespace='/walle'))
@@ -204,6 +228,12 @@ def register_socketio(app):
     # socket_args = {"debug": app.config.get('DEBUG'), "host": app.config.get('HOST'), "port": app.config.get('PORT')}
     # socket_thread = threading.Thread(target=register_socketio(app), name="socket_thread", args=(app, ))
     # socket_thread.start()
+=======
+
+    socketio.init_app(app, async_mode='gevent')
+    socketio.on_namespace(WalleSocketIO(namespace='/walle'))
+    socketio.run(app, host=app.config.get('HOST'), port=app.config.get('PORT'), use_reloader=False, debug=False)
+>>>>>>> Stashed changes
 
     return app
 

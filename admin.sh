@@ -27,10 +27,19 @@ function init() {
     echo "Initing walle"
     echo "----------------"
     SystemName
+<<<<<<< Updated upstream
     
     python3.7 -m pip install virtualenv -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
     if [ ! -d "venv" ]; then
         virtualenv --python=python3.7 --no-site-package venv # 注意:安装失败请指定python路径. mac 可能会有用anaconda的python. 请不要mac试用, 麻烦多多
+=======
+
+    python3 -m pip install -r requirements.txt -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+
+    pip install virtualenv -i http://pypi.douban.com/simple --trusted-host pypi.douban.com
+    if [[ ! -d "venv" ]]; then
+        virtualenv --p python3.7 --no-site-package venv # 注意:安装失败请指定python路径. mac 可能会有用anaconda的python. 请不要mac试用, 麻烦多多
+>>>>>>> Stashed changes
     fi
 
     requirement
