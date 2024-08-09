@@ -29,7 +29,7 @@ Flask-WTF==0.14.2
 WTForms==2.1
 
 # Deployment
-gunicorn>=19.1.1
+gunicorn>=22.0.0
 
 # Auth
 Flask-Login==0.4.0
@@ -46,3 +46,7 @@ dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerabilit
 idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
 
 zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+certifi>=2024.7.4 # not directly required, pinned by Snyk to avoid a vulnerability
+cryptography>=42.0.8 # not directly required, pinned by Snyk to avoid a vulnerability
+mako>=1.2.2 # not directly required, pinned by Snyk to avoid a vulnerability
+paramiko>=3.4.0 # not directly required, pinned by Snyk to avoid a vulnerability
