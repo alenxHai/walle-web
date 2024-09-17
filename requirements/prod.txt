@@ -40,7 +40,7 @@ celery==3.1.18
 pycrypto==2.6.1
 pytz==2015.7
 requests==2.20.0
-GitPython==3.1.33
+GitPython==3.1.35
 pymysql ==0.9.3
 dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
 idna>=3.7 # not directly required, pinned by Snyk to avoid a vulnerability
